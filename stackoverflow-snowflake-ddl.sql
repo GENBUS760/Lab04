@@ -1,4 +1,4 @@
--- first create the Snowflake database we need
+-- first create the database we need
 create or replace database stackoverflow2010;
 
 -- then set our context
@@ -48,8 +48,8 @@ create or replace table users
  
 create or replace table badges  
 (Id integer,
-  UserId integer,
   Name string,
+  UserId integer,
   Date timestamp);
   
 create or replace table votes
@@ -166,6 +166,7 @@ on_error = "continue";
 select * from posts limit 5;
 select * from users limit 5;
 select * from votes limit 5;
+select * from badges limit 5;
 select * from postlinks limit 5;
 select * from posttypes limit 5;
 select * from votetypes limit 5;
