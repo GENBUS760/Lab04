@@ -213,18 +213,21 @@ select * from posts order by creationdate desc limit 10;
 select * from posts order by creationdate, answercount limit 10;
 select tags from posts order by len(tags) desc;
 
+-- Get length of each tag string
 select Id, tags, len(tags) from posts
     order by len(tags) desc
     nulls last
     limit 5;
 -- https://stackoverflow.com/questions/131165
     
+-- Count the number of tags for each post
 -- https://docs.snowflake.com/en/sql-reference/functions/regexp_count.html
 select Id, tags, regexp_count(tags, '<') as num_tags from posts
     order by num_tags desc
     nulls last
     limit 5;
 
+-- Replace NULLs in query result
 -- https://docs.snowflake.com/en/sql-reference/functions/nvl.html    
 -- Expression and column should have the same data type
 select nvl(to_varchar(LastEditDate), 'Never Edited') from posts;
@@ -262,41 +265,43 @@ select date_part(month, creationdate) from posts;
 
 -- Try: Redo the previous query using the date_part function
 
--- Try: Write a query to print the posts that were created
--- in November, 2009 and tagged with <sql> (may include other tags)
-
 -- Try: Which StackOverflow user had the highest reputation in this
 -- dataset? Hint: First find this user's ID using SQL, then go to their
 -- StackOverflow profile at the link:
 --     https://stackoverflow.com/users/ID YOU FOUND USING SQL (replace)
-
-select count(*) from posts where LastEditDate is not null;
-
--- SELECT FROM GROUPBY AND AGGREGATION
--- https://docs.snowflake.com/en/sql-reference/constructs/group-by.html
-select OwnerUserId as Id, max(CreationDate) as FirstPostDate
-    from posts
-    group by OwnerUserId
-    order by FirstPostDate;
 
 -- Try: Who created the first ever post on StackOverflow?
 -- Hint: First find this user's ID using SQL, then go to their
 -- StackOverflow profile at the link:
 --     https://stackoverflow.com/users/ID YOU FOUND USING SQL (replace)
 
+-- SELECT FROM GROUPBY AND AGGREGATION
+-- https://docs.snowflake.com/en/sql-reference/constructs/group-by.html
+
+-- Find each user's first post date
+select OwnerUserId as Id, min(CreationDate) as FirstPostDate
+    from posts
+    group by OwnerUserId
+    order by FirstPostDate;
+
+-- How many posts had tags containing sql?
 select count(*) as number from posts where tags like '%sql%';
 
+-- How many posts exist for each string of tags?
 select count(*) as number, tags from posts
     group by tags
     order by number desc
     limit 5;
 
+-- How many users signed up in each month of the year?
 -- https://docs.snowflake.com/en/sql-reference/functions/monthname.html
 select monthname(CreationDate) as month,
     count(*) as number_of_users
     from users
     group by month;
     
+-- How many questions were posted for each
+-- tag string containing sql?
 select tags, count(*) as number_of_questions
     from posts
     where tags like '%sql%' and PostTypeId = 1
@@ -304,6 +309,8 @@ select tags, count(*) as number_of_questions
     order by number_of_questions desc
     limit 10;
 
+-- How many answers were posted for each
+-- tag string containing sql?
 select tags, sum(AnswerCount) as number_of_answers
     from posts
     where tags like '%sql%' and PostTypeId = 1
@@ -311,13 +318,15 @@ select tags, sum(AnswerCount) as number_of_answers
     order by number_of_answers desc
     limit 10;
     
+-- Print the average number of answers per question
+-- for each tag string containing sql
 select tags, sum(AnswerCount)/count(*) as number_of_ans_per_qn
     from posts
     where tags like '%sql%'
     group by tags
     order by number_of_ans_per_qn desc
     limit 10;
-    
+  
 -- https://docs.snowflake.com/en/sql-reference/functions/div0.html
 select tags, div0(sum(AnswerCount), count(*)) as number_of_ans_per_qn
     from posts
@@ -336,6 +345,8 @@ select tags, round(sum(AnswerCount)/count(*), 0) as number_of_ans_per_qn
     order by number_of_ans_per_qn desc
     limit 10;
 
+-- How many questions did each user ask in each month
+-- of the year?
 select OwnerUserId, monthname(CreationDate) as mon, count(*)
     from posts
     where PostTypeId = 1
@@ -344,20 +355,28 @@ select OwnerUserId, monthname(CreationDate) as mon, count(*)
 
 -- https://docs.snowflake.com/en/sql-reference/functions/nvl2.html
 -- All three expressions should have the same (or compatible) data type.
+
+-- How many posts were (i) never edited, (ii) edited at least once?
 select nvl2(to_varchar(LastEditDate), 'Edited', 'Never Edited') as EditStatus, count(*)
     from posts
     group by EditStatus;
 
 -- SELECT FROM GROUPBY HAVING
 
+-- Print the average number of answers per question
+-- for each tag string containing sql, for only those
+-- tag strings with at least 10 questions
 select tags, sum(AnswerCount)/count(*) as number_of_ans_per_qn
     from posts
-    where tags like '%sql%'
+    where tags like '%sql%' and PostTypeId = 1
     group by tags
     having count(*) > 10
     order by number_of_ans_per_qn desc
     limit 10;
 
+-- What is the average number of tags used by each
+-- user in the questions they ask? Only consider users
+-- having at least 50 questions.
 select OwnerUserId, round(nvl(avg(regexp_count(tags, '<')), 0), 2) as avg_num_tags
     from posts
     where PostTypeId = 1
