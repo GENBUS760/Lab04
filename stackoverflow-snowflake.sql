@@ -2,7 +2,7 @@
 create or replace database stackoverflow2010;
 
 -- then set our context
-use role sysadmin;
+use role accountadmin;
 use warehouse compute_wh;
 use database stackoverflow2010;
 use schema public;
@@ -439,6 +439,13 @@ select OwnerUserId, round(nvl(avg(regexp_count(tags, '<')), 0), 2) as avg_num_ta
 -- 2010	56951
 -- 2009	31642
 -- 2008	5446 
+--
+-- OR
+--
+-- YEAR	COUNT
+-- 2010	19626
+-- 2009	11797
+-- 2008	2027 
 --
 -- Q3. [2 points] On what day of the week are
 -- most questions posted?
